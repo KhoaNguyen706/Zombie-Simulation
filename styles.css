@@ -1,0 +1,21 @@
+.circle{
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid black;
+}
+.zombie{
+    background-color: green !important;
+}
+
+.human{
+    background-color: red !important;
+}
+#management{
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    padding: 10ps;
+}
+#reset{
+    display: flex;
+}

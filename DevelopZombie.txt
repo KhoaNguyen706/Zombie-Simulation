@@ -1,0 +1,7 @@
+- make zombie go by herbs
+- spawn zombie button
+- Using boid algorithm to make zomebie
+- when zombie touch human => human become zombie
+- spawn human (can kill zombie) human with gun and bottle (10% rate to spawn)
+- zombie go to humans (zombie move fast)
+- humans go to random direction
