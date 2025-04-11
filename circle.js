@@ -9,7 +9,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _Circle_x, _Circle_y, _Circle_r, _Circle_dx, _Circle_dy, _Circle_speed, _Circle_div;
+var _Circle_x, _Circle_y, _Circle_r, _Circle_dx, _Circle_dy, _Circle_speed, _Circle_div, _Circle_attackcountdown;
 // export{}
 class Circle {
     /** Takes in x, y, true/false is a zombie or not, optional radius */
@@ -21,6 +21,8 @@ class Circle {
         _Circle_dy.set(this, void 0); // add velocity
         _Circle_speed.set(this, 2);
         _Circle_div.set(this, void 0);
+        // attak function
+        _Circle_attackcountdown.set(this, 17);
         __classPrivateFieldSet(this, _Circle_x, x, "f");
         __classPrivateFieldSet(this, _Circle_y, y, "f");
         __classPrivateFieldSet(this, _Circle_r, r, "f");
@@ -28,17 +30,17 @@ class Circle {
         __classPrivateFieldGet(this, _Circle_div, "f").classList.add('circle');
         __classPrivateFieldGet(this, _Circle_div, "f").style.width = `${r}px`;
         __classPrivateFieldGet(this, _Circle_div, "f").style.height = `${r}px`;
+        // zombie clarify
         if (isZombie)
             __classPrivateFieldGet(this, _Circle_div, "f").classList.add('zombie');
         else
             __classPrivateFieldGet(this, _Circle_div, "f").classList.add('human');
+        // vector and velocity
         let angle = Math.random() * 2 * Math.PI;
         __classPrivateFieldSet(this, _Circle_dx, Math.cos(angle) * __classPrivateFieldGet(this, _Circle_speed, "f"), "f");
         __classPrivateFieldSet(this, _Circle_dy, Math.sin(angle) * __classPrivateFieldGet(this, _Circle_speed, "f"), "f");
     }
-    /** x coordinate */
     get x() { return __classPrivateFieldGet(this, _Circle_x, "f"); }
-    /** y coordinate */
     get y() { return __classPrivateFieldGet(this, _Circle_y, "f"); }
     /** radius */
     get r() { return __classPrivateFieldGet(this, _Circle_r, "f"); }
@@ -90,8 +92,8 @@ class Circle {
         nearby.forEach(other => {
             const dist = this.distance(other);
             if (other !== this && dist < 80 && dist > 20) {
-                steering_ch[0] += other.x;
-                steering_ch[1] += other.y;
+                steering_ch[0] += __classPrivateFieldGet(other, _Circle_x, "f");
+                steering_ch[1] += __classPrivateFieldGet(other, _Circle_y, "f");
                 total++;
             }
         });
@@ -114,7 +116,7 @@ class Circle {
             if (humans.length > 0) {
                 const closest = humans.reduce((a, b) => this.distance(a) < this.distance(b) ? a : b);
                 if (this.distance(closest) < 100) {
-                    const [steerX, steerY] = this.steer(closest.x, closest.y);
+                    const [steerX, steerY] = this.steer(__classPrivateFieldGet(closest, _Circle_x, "f"), closest.y);
                     __classPrivateFieldSet(this, _Circle_dx, __classPrivateFieldGet(this, _Circle_dx, "f") + steerX * 0.5, "f");
                     __classPrivateFieldSet(this, _Circle_dy, __classPrivateFieldGet(this, _Circle_dy, "f") + steerY * 0.5, "f");
                 }
@@ -145,12 +147,16 @@ class Circle {
     }
     /** doesn't draw directly, rather it updates the divs css */
     draw() {
-        this.div.style.left = `${this.x - this.r / 2}px`;
+        this.div.style.left = `${__classPrivateFieldGet(this, _Circle_x, "f") - this.r / 2}px`;
         this.div.style.top = `${this.y - this.r / 2}px`;
     }
     infect() {
         this.div.classList.remove('human');
         this.div.classList.add('zombie');
+        // Flash effect
+        this.div.classList.add('flash');
+        setTimeout(() => this.div.classList.remove('flash'), 300);
+        spawnEffect(__classPrivateFieldGet(this, _Circle_x, "f"), __classPrivateFieldGet(this, _Circle_y, "f"), 'red');
     }
     uninfect() {
         this.div.classList.remove('zombie');
@@ -158,7 +164,30 @@ class Circle {
     }
     /** returns the distance between two circles */
     distance(other) {
-        return Math.pow((Math.pow((this.x - other.x), 2) + Math.pow((this.y - other.y), 2)), .5);
+        return Math.pow((Math.pow((__classPrivateFieldGet(this, _Circle_x, "f") - __classPrivateFieldGet(other, _Circle_x, "f")), 2) + Math.pow((this.y - other.y), 2)), .5);
+    }
+    // **attack function for human
+    attack(zombie) {
+        var _a;
+        if (__classPrivateFieldGet(this, _Circle_attackcountdown, "f") <= 0 && Math.random() < 0.25) {
+            __classPrivateFieldSet(this, _Circle_attackcountdown, 35, "f");
+            return true;
+        }
+        else {
+            __classPrivateFieldSet(this, _Circle_attackcountdown, (_a = __classPrivateFieldGet(this, _Circle_attackcountdown, "f"), _a--, _a), "f");
+            return false;
+        }
     }
 }
-_Circle_x = new WeakMap(), _Circle_y = new WeakMap(), _Circle_r = new WeakMap(), _Circle_dx = new WeakMap(), _Circle_dy = new WeakMap(), _Circle_speed = new WeakMap(), _Circle_div = new WeakMap();
+_Circle_x = new WeakMap(), _Circle_y = new WeakMap(), _Circle_r = new WeakMap(), _Circle_dx = new WeakMap(), _Circle_dy = new WeakMap(), _Circle_speed = new WeakMap(), _Circle_div = new WeakMap(), _Circle_attackcountdown = new WeakMap();
+function spawnEffect(x, y, color) {
+    const splat = document.createElement('div');
+    splat.classList.add('splat');
+    splat.style.left = `${x}px`;
+    splat.style.top = `${y}px`;
+    splat.style.backgroundColor = color;
+    document.body.appendChild(splat);
+    setTimeout(() => {
+        splat.remove();
+    }, 500);
+}

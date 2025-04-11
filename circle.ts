@@ -7,6 +7,9 @@ class Circle{
     #dy:number // add velocity
     #speed:number=2;
     #div: HTMLDivElement
+    // attak function
+    #attackcountdown :number = 17;
+
     /** Takes in x, y, true/false is a zombie or not, optional radius */
     constructor(x:number, y:number, isZombie:boolean, r: number = 20){
         this.#x = x;
@@ -16,15 +19,16 @@ class Circle{
         this.#div.classList.add('circle')
         this.#div.style.width=`${r}px`
         this.#div.style.height=`${r}px`
+        // zombie clarify
         if(isZombie) this.#div.classList.add('zombie')
         else this.#div.classList.add('human')
+        // vector and velocity
         let angle = Math.random()*2 * Math.PI;
         this.#dx=Math.cos(angle)* this.#speed;
         this.#dy=Math.sin(angle)* this.#speed;
-    }
-    /** x coordinate */
-    get x()  : number{ return this.#x }
-    /** y coordinate */
+
+        
+}   get x():number {return this.#x}
     get y()  : number{ return this.#y }
     /** radius */
     get r()  : number{ return this.#r }
@@ -35,6 +39,8 @@ class Circle{
     get isZombie(): boolean {
         return this.div.classList.contains('zombie')
     }
+    
+    
     protected steer(targetX:number,targetY:number):[number,number]{
             const maxForce = 0.05;
             const maxSpeed = 3;
@@ -80,8 +86,8 @@ class Circle{
         nearby.forEach(other => {
             const dist = this.distance(other);
             if (other !== this && dist < 80 && dist > 20) {
-                steering_ch[0] += other.x;
-                steering_ch[1] += other.y;
+                steering_ch[0] += other.#x;
+                steering_ch[1] += other.#y;
                 total++;
             }
         });
@@ -107,7 +113,7 @@ class Circle{
             if(humans.length >0){
                 const closest = humans.reduce((a,b)=>this.distance(a)<this.distance(b)?a:b)
                 if(this.distance(closest)<100){
-                    const [steerX, steerY] = this.steer(closest.x, closest.y);
+                    const [steerX, steerY] = this.steer(closest.#x, closest.y);
                     this.#dx += steerX*0.5;
                     this.#dy += steerY*0.5;
                 }
@@ -138,12 +144,16 @@ class Circle{
     }
     /** doesn't draw directly, rather it updates the divs css */
     draw() : void{
-        this.div.style.left = `${this.x-this.r/2}px`;
+        this.div.style.left = `${this.#x-this.r/2}px`;
         this.div.style.top = `${this.y-this.r/2}px`;
     }
     infect() : void{
         this.div.classList.remove('human');
         this.div.classList.add('zombie');
+        // Flash effect
+        this.div.classList.add('flash');
+        setTimeout(() => this.div.classList.remove('flash'), 300);
+        spawnEffect(this.#x, this.#y, 'red');
     }
     uninfect(): void {
         this.div.classList.remove('zombie');
@@ -152,6 +162,30 @@ class Circle{
     
     /** returns the distance between two circles */
     distance(other : Circle) : number{
-        return ((this.x-other.x)**2+(this.y-other.y)**2)**.5
+        return ((this.#x-other.#x)**2+(this.y-other.y)**2)**.5
     }
+
+    // **attack function for human
+    attack(zombie:Circle):boolean{
+        if(this.#attackcountdown <=0 && Math.random()<0.35){
+            this.#attackcountdown=35;
+            return true;
+            }
+        else{
+            this.#attackcountdown--;
+            return false;
+        }
+    }
+}
+function spawnEffect(x: number, y: number, color: string){
+    const splat = document.createElement('div');
+    splat.classList.add('splat');
+    splat.style.left = `${x}px`;
+    splat.style.top = `${y}px`;
+    splat.style.backgroundColor = color;
+    document.body.appendChild(splat);
+
+    setTimeout(() => {
+        splat.remove();
+    }, 500);
 }
